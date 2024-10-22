@@ -6,6 +6,10 @@ on:
 jobs:
   build-and-run:
     name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: ["pixi", "micromamba"]
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
@@ -21,16 +25,17 @@ jobs:
         with:
           provenance: false
           platforms: linux/amd64
-          tags: error-activate:latest
+          tags: error-activate-${{ matrix.kind }}:latest
           push: false
           load: true
+          file: ${{ matrix.kind }}.Dockerfile
       - name: Print debug info
         run: |
-          docker run -it test:my /bin/bash -ic 'cat $(which activate)'
+          docker run -t error-activate-${{ matrix.kind }}:latest /bin/bash -ic 'cat $(which activate)'
       - name: Run test - this won't work
         run: |
-          docker run -it test:my /bin/bash -ic 'source activate jupyter && jupyter'
+          docker run -t error-activate-${{ matrix.kind }}:latest /bin/bash -ic 'source activate jupyter && jupyter --help'
       - name: Run test - this will work
         if: always()
         run: |
-          docker run -it test:my /bin/bash -ic 'source activate jupyter && source activate jupyter && jupyter'
+          docker run -t error-activate-${{ matrix.kind }}:latest /bin/bash -ic 'source activate jupyter && source activate jupyter && jupyter --help'
