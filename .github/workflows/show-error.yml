@@ -12,7 +12,25 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          # needed for 'pre-commit-mirrors-insert-license'
           fetch-depth: 0
-          - name: Set up Docker Builddockx
+      - name: Set up Docker Builddockx
         uses: docker/setup-buildx-action@v2
+      - name: Docker build
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          provenance: false
+          platforms: linux/amd64
+          tags: error-activate:latest
+          push: false
+          load: true
+      - name: Print debug info
+        run: |
+          docker run -it test:my /bin/bash -ic 'cat $(which activate)'
+      - name: Run test - this won't work
+        run: |
+          docker run -it test:my /bin/bash -ic 'source activate jupyter && jupyter'
+      - name: Run test - this will work
+        if: always()
+        run: |
+          docker run -it test:my /bin/bash -ic 'source activate jupyter && source activate jupyter && jupyter'
